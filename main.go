@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"os/exec"
 	"io/ioutil"
 	"encoding/json"
 	"fmt"
@@ -29,7 +30,7 @@ func pathTail(path string) int {
 
 func serve(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("Serve")
+	//fmt.Println("Serve")
 
 	jsonFile, err := os.Open("videos.json")
 	if err != nil {
@@ -51,9 +52,15 @@ func serve(w http.ResponseWriter, r *http.Request) {
     <head>
         <title>MCU Trailers</title>
         <script>
-            function get(id) {
+            function play(id) {
                 const Http = new XMLHttpRequest();
                 const url='/play/' + id;
+                Http.open('GET', url);
+                Http.send();
+            }
+            function stop() {
+                const Http = new XMLHttpRequest();
+                const url='/stop';
                 Http.open('GET', url);
                 Http.send();
             }
@@ -79,6 +86,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
     </head>
     <body>
         <h1>MCU Trailers</h1>
+	<button onclick='stop()' class='button' style='background-color:#FF0000;'>STOP</button>
         <ul>`
 
 	for _, film := range films {
@@ -89,7 +97,7 @@ func serve(w http.ResponseWriter, r *http.Request) {
 			if w == nil {
 				videos[key] = trailer
 			}
-			html += fmt.Sprintf("<button onclick='get(%d)' class='button'>%s</button>", key, trailer)
+			html += fmt.Sprintf("<button onclick='play(%d)' class='button'>%s</button>", key, trailer)
 		}
 		html += fmt.Sprintln("</div>")
 		html += fmt.Sprintln("            </li>")
@@ -108,16 +116,16 @@ func play(w http.ResponseWriter, r *http.Request) {
 
 	id := pathTail(r.URL.Path)
 
-	fmt.Println("Play:", id, videos[id])
+	//fmt.Println("Play:", id, videos[id])
 
-	if id < 0 || id >= len(videos) {
+	if id > 0 && id <= len(videos) {
 
-		/*cmd := exec.Command("./start.sh", "videos/" + videos[id])
+		cmd := exec.Command("./play.sh", "videos/" + videos[id])
 		err := cmd.Start()
-
+		
 		if err != nil {
 			fmt.Printf("%s", err)
-		}*/
+		}
 
 	}
 
@@ -128,14 +136,14 @@ func play(w http.ResponseWriter, r *http.Request) {
 
 func stop(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Println("Stop")
+	//fmt.Println("Stop")
 
-	/*cmd := exec.Command("./stop.sh")
+	cmd := exec.Command("./stop.sh")
 	err := cmd.Start()
 
 	if err != nil {
 		fmt.Printf("%s", err)
-	}*/
+	}
 
 
 	w.WriteHeader(http.StatusOK)
